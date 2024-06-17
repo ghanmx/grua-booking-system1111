@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Button } from '@chakra-ui/react';
 import { GoogleMap, LoadScript, Marker, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
+import { useNavigate } from 'react-router-dom';
 
 const containerStyle = {
   width: '100%',
@@ -16,6 +17,7 @@ const GoogleMapsRoute = () => {
   const [origin, setOrigin] = useState(null);
   const [destination, setDestination] = useState(null);
   const [response, setResponse] = useState(null);
+  const navigate = useNavigate();
 
   const directionsCallback = (response) => {
     if (response !== null) {
@@ -39,6 +41,10 @@ const GoogleMapsRoute = () => {
     setOrigin(null);
     setDestination(null);
     setResponse(null);
+  };
+
+  const handleConfirm = () => {
+    navigate('/booking', { state: { origin, destination } });
   };
 
   return (
@@ -72,6 +78,7 @@ const GoogleMapsRoute = () => {
         </GoogleMap>
       </LoadScript>
       <Button onClick={handleReset} mt={4}>Reset</Button>
+      <Button onClick={handleConfirm} mt={4} ml={4} colorScheme="blue">Confirm</Button>
     </Box>
   );
 };

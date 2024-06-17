@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, VStack, useToast } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 
 const BookingForm = () => {
   const [formData, setFormData] = useState({
@@ -13,10 +14,20 @@ const BookingForm = () => {
     additionalInfo: '',
     pickupDate: '',
     pickupTime: '',
+    origin: null,
+    destination: null,
   });
 
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state) {
+      const { origin, destination } = location.state;
+      setFormData((prevData) => ({ ...prevData, origin, destination }));
+    }
+  }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,9 +36,9 @@ const BookingForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const { serviceType, userName, phoneNumber, vehicleMake, vehicleModel, vehicleSize, pickupDate, pickupTime } = formData;
+    const { serviceType, userName, phoneNumber, vehicleMake, vehicleModel, vehicleSize, pickupDate, pickupTime, origin, destination } = formData;
 
-    if (!serviceType || !userName || !phoneNumber || !vehicleMake || !vehicleModel || !vehicleSize || !pickupDate || !pickupTime) {
+    if (!serviceType || !userName || !phoneNumber || !vehicleMake || !vehicleModel || !vehicleSize || !pickupDate || !pickupTime || !origin || !destination) {
       toast({
         title: 'Error',
         description: 'Please fill in all required fields.',
@@ -92,6 +103,7 @@ const BookingForm = () => {
             <FormLabel>Pickup Time</FormLabel>
             <Input type="time" name="pickupTime" value={formData.pickupTime} onChange={handleChange} />
           </FormControl>
+          <Button as={RouterLink} to="/map" colorScheme="blue" mt={4}>Select Origin and Destination on Map</Button>
           <Button colorScheme="blue" type="submit">Book Now</Button>
         </VStack>
       </form>
