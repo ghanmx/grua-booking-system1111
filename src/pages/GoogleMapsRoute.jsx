@@ -49,7 +49,7 @@ const GoogleMapsRoute = () => {
 
   return (
     <Box>
-      <LoadScript googleMapsApiKey="YOUR_GOOGLE_MAPS_API_KEY">
+      <LoadScript googleMapsApiKey="AIzaSyAsVBklZwWs-3nQ3vVaWTANaYN70bGkIrA">
         <GoogleMap
           mapContainerStyle={containerStyle}
           center={center}
