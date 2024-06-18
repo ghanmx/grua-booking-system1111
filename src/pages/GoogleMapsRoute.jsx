@@ -32,8 +32,10 @@ const GoogleMapsRoute = () => {
   const handleMapClick = (event) => {
     if (!origin) {
       setOrigin({ lat: event.latLng.lat(), lng: event.latLng.lng() });
+      console.log('Origin set to:', { lat: event.latLng.lat(), lng: event.latLng.lng() });
     } else if (!destination) {
       setDestination({ lat: event.latLng.lat(), lng: event.latLng.lng() });
+      console.log('Destination set to:', { lat: event.latLng.lat(), lng: event.latLng.lng() });
     }
   };
 
@@ -41,15 +43,17 @@ const GoogleMapsRoute = () => {
     setOrigin(null);
     setDestination(null);
     setResponse(null);
+    console.log('Map reset');
   };
 
   const handleConfirm = () => {
     navigate('/booking', { state: { origin, destination } });
+    console.log('Navigating to booking with:', { origin, destination });
   };
 
   return (
     <Box>
-      <LoadScript googleMapsApiKey="AIzaSyAsVBklZwWs-3nQ3vVaWTANaYN70bGkIrA">
+      <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
         <GoogleMap
           mapContainerStyle={containerStyle}
           center={center}

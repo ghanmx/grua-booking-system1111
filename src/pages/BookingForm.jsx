@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, VStack, useToast } from '@chakra-ui/react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link as RouterLink } from 'react-router-dom';
+import { LoadScript, GoogleMap, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
 
 const BookingForm = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +19,8 @@ const BookingForm = () => {
     destination: null,
   });
 
+  const [directions, setDirections] = useState(null);
+
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,12 +29,14 @@ const BookingForm = () => {
     if (location.state) {
       const { origin, destination } = location.state;
       setFormData((prevData) => ({ ...prevData, origin, destination }));
+      console.log('Origin and Destination set from location state:', { origin, destination });
     }
   }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    console.log('Form data updated:', { [name]: value });
   };
 
   const handleSubmit = (e) => {
@@ -49,8 +54,21 @@ const BookingForm = () => {
       return;
     }
 
+    console.log('Form submitted with data:', formData);
+
     // Redirect to confirmation page
     navigate('/confirmation', { state: { formData } });
+  };
+
+  const handleDirectionsCallback = (response) => {
+    if (response !== null) {
+      if (response.status === 'OK') {
+        setDirections(response);
+        console.log('Directions response:', response);
+      } else {
+        console.log('Directions request failed due to:', response.status);
+      }
+    }
   };
 
   return (
@@ -107,6 +125,32 @@ const BookingForm = () => {
           <Button colorScheme="blue" type="submit">Book Now</Button>
         </VStack>
       </form>
+      {formData.origin && formData.destination && (
+        <LoadScript googleMapsApiKey="YOUR_GOOGLE_MAPS_API_KEY">
+          <GoogleMap
+            id="direction-example"
+            mapContainerStyle={{ height: "400px", width: "100%" }}
+            zoom={7}
+            center={formData.origin}
+          >
+            <DirectionsService
+              options={{
+                destination: formData.destination,
+                origin: formData.origin,
+                travelMode: 'DRIVING'
+              }}
+              callback={handleDirectionsCallback}
+            />
+            {directions && (
+              <DirectionsRenderer
+                options={{
+                  directions: directions
+                }}
+              />
+            )}
+          </GoogleMap>
+        </LoadScript>
+      )}
     </Box>
   );
 };
