@@ -15,11 +15,11 @@ const BookingForm = () => {
     additionalInfo: '',
     pickupDate: '',
     pickupTime: '',
-    origin: null,
+    origin: { lat: 26.509672, lng: -100.0095504 },
     destination: null,
   });
 
-  const [origin, setOrigin] = useState(null);
+  const [origin, setOrigin] = useState({ lat: 26.509672, lng: -100.0095504 });
   const [destination, setDestination] = useState(null);
   const [directions, setDirections] = useState(null);
 
@@ -76,17 +76,13 @@ const BookingForm = () => {
   };
 
   const handleMapClick = (event) => {
-    if (!origin) {
-      setOrigin({ lat: event.latLng.lat(), lng: event.latLng.lng() });
-      console.log('Origin set to:', { lat: event.latLng.lat(), lng: event.latLng.lng() });
-    } else if (!destination) {
+    if (!destination) {
       setDestination({ lat: event.latLng.lat(), lng: event.latLng.lng() });
       console.log('Destination set to:', { lat: event.latLng.lat(), lng: event.latLng.lng() });
     }
   };
 
   const handleReset = () => {
-    setOrigin(null);
     setDestination(null);
     setDirections(null);
     console.log('Map reset');
@@ -151,7 +147,7 @@ const BookingForm = () => {
             <GoogleMap
               mapContainerStyle={{ height: "400px", width: "100%" }}
               zoom={7}
-              center={origin || { lat: -3.745, lng: -38.523 }}
+              center={origin}
               onClick={handleMapClick}
             >
               {origin && <Marker position={origin} />}
@@ -161,6 +157,7 @@ const BookingForm = () => {
                   options={{
                     destination: destination,
                     origin: origin,
+                    waypoints: [{ location: formData.origin, stopover: true }],
                     travelMode: 'DRIVING'
                   }}
                   callback={handleDirectionsCallback}
