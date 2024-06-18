@@ -66,8 +66,10 @@ const BookingForm = () => {
         setDirections(response);
         console.log('Directions response:', response);
       } else {
-        console.log('Directions request failed due to:', response.status);
+        console.error('Directions request failed due to:', response.status);
       }
+    } else {
+      console.error('Directions response is null');
     }
   };
 
@@ -126,7 +128,7 @@ const BookingForm = () => {
         </VStack>
       </form>
       {formData.origin && formData.destination && (
-        <LoadScript googleMapsApiKey="YOUR_GOOGLE_MAPS_API_KEY">
+        <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
           <GoogleMap
             id="direction-example"
             mapContainerStyle={{ height: "400px", width: "100%" }}
