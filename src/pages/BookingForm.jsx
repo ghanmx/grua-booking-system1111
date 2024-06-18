@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, VStack, useToast } from '@chakra-ui/react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link as RouterLink } from 'react-router-dom';
-import { LoadScript, GoogleMap, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
+import { LoadScript, GoogleMap, Marker, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
 
 const BookingForm = () => {
   const [formData, setFormData] = useState({
@@ -19,6 +19,8 @@ const BookingForm = () => {
     destination: null,
   });
 
+  const [origin, setOrigin] = useState(null);
+  const [destination, setDestination] = useState(null);
   const [directions, setDirections] = useState(null);
 
   const toast = useToast();
@@ -73,6 +75,28 @@ const BookingForm = () => {
     }
   };
 
+  const handleMapClick = (event) => {
+    if (!origin) {
+      setOrigin({ lat: event.latLng.lat(), lng: event.latLng.lng() });
+      console.log('Origin set to:', { lat: event.latLng.lat(), lng: event.latLng.lng() });
+    } else if (!destination) {
+      setDestination({ lat: event.latLng.lat(), lng: event.latLng.lng() });
+      console.log('Destination set to:', { lat: event.latLng.lat(), lng: event.latLng.lng() });
+    }
+  };
+
+  const handleReset = () => {
+    setOrigin(null);
+    setDestination(null);
+    setDirections(null);
+    console.log('Map reset');
+  };
+
+  const handleConfirm = () => {
+    setFormData((prevData) => ({ ...prevData, origin, destination }));
+    console.log('Origin and Destination confirmed:', { origin, destination });
+  };
+
   return (
     <Box p={4}>
       <form onSubmit={handleSubmit}>
@@ -123,36 +147,39 @@ const BookingForm = () => {
             <FormLabel>Pickup Time</FormLabel>
             <Input type="time" name="pickupTime" value={formData.pickupTime} onChange={handleChange} />
           </FormControl>
-          <Button as={RouterLink} to="/map" colorScheme="blue" mt={4}>Select Origin and Destination on Map</Button>
+          <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+            <GoogleMap
+              mapContainerStyle={{ height: "400px", width: "100%" }}
+              zoom={7}
+              center={origin || { lat: -3.745, lng: -38.523 }}
+              onClick={handleMapClick}
+            >
+              {origin && <Marker position={origin} />}
+              {destination && <Marker position={destination} />}
+              {origin && destination && !directions && (
+                <DirectionsService
+                  options={{
+                    destination: destination,
+                    origin: origin,
+                    travelMode: 'DRIVING'
+                  }}
+                  callback={handleDirectionsCallback}
+                />
+              )}
+              {directions && (
+                <DirectionsRenderer
+                  options={{
+                    directions: directions
+                  }}
+                />
+              )}
+            </GoogleMap>
+          </LoadScript>
+          <Button onClick={handleReset} mt={4}>Reset</Button>
+          <Button onClick={handleConfirm} mt={4} ml={4} colorScheme="blue">Confirm</Button>
           <Button colorScheme="blue" type="submit">Book Now</Button>
         </VStack>
       </form>
-      {formData.origin && formData.destination && (
-        <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
-          <GoogleMap
-            id="direction-example"
-            mapContainerStyle={{ height: "400px", width: "100%" }}
-            zoom={7}
-            center={formData.origin}
-          >
-            <DirectionsService
-              options={{
-                destination: formData.destination,
-                origin: formData.origin,
-                travelMode: 'DRIVING'
-              }}
-              callback={handleDirectionsCallback}
-            />
-            {directions && (
-              <DirectionsRenderer
-                options={{
-                  directions: directions
-                }}
-              />
-            )}
-          </GoogleMap>
-        </LoadScript>
-      )}
     </Box>
   );
 };
