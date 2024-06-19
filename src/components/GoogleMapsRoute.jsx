@@ -21,23 +21,19 @@ const GoogleMapsRoute = ({ setDistance }) => {
     const service = new window.google.maps.DistanceMatrixService();
     service.getDistanceMatrix(
       {
-        origins: [origin, pickup],
-        destinations: [pickup, destination],
+        origins: [pickup],
+        destinations: [destination],
         travelMode: 'DRIVING',
       },
       (response, status) => {
         if (status === 'OK') {
-          const distanceToPickup = response.rows[0].elements[1].distance.value / 1000; // Distancia en kilómetros al punto de recogida
-          const distanceToDestination = response.rows[1].elements[1].distance.value / 1000; // Distancia en kilómetros al destino
-          const totalDistance = distanceToPickup + distanceToDestination; // Distancia total en kilómetros
-          setDistance(totalDistance);
-          const price = calculatePrice(totalDistance);
+          const distanceToDestination = response.rows[0].elements[0].distance.value / 1000; // Distancia en kilómetros al destino
+          setDistance(distanceToDestination);
+          const price = calculatePrice(distanceToDestination);
           setTotalPrice(price);
-        } else if (status === 'REQUEST_DENIED') {
-          setError('Request denied. Please check your API key and permissions.');
-          console.error('Error al calcular la ruta:', status, response);
         } else {
-          setError('Error al calcular la ruta: ' + status);
+          setError('Error calculating the route: ' + status);
+          console.error('Error calculating the route:', status, response);
         }
       }
     );

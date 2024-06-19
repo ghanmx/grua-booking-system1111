@@ -66,8 +66,35 @@ const BookingForm = () => {
     const costPerKm = 19;
     const totalCost = baseCost + (distance * costPerKm);
 
-    // Redirect to payment page with calculated cost and additional details
-    navigate('/payment', { state: { formData, totalCost, serviceDetails: { serviceType, distance, pickupLocation, destinationLocation } } });
+    // Send booking request to the backend
+    fetch('https://your-backend-api.com/bookings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ...formData, totalCost }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log('Booking successful:', data);
+        // Redirect to payment page with calculated cost and additional details
+        navigate('/payment', { state: { formData, totalCost, serviceDetails: { serviceType, distance, pickupLocation, destinationLocation } } });
+      })
+      .catch((error) => {
+        console.error('There was a problem with the booking request:', error);
+        toast({
+          title: 'Error',
+          description: 'There was a problem processing your booking. Please try again later.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      });
   };
 
   const handleMapClick = (event) => {
