@@ -11,7 +11,7 @@ const GoogleMapsRoute = ({ setDistance }) => {
   const [directions, setDirections] = useState(null);
   const [map, setMap] = useState(null);
   const [tollCost, setTollCost] = useState(0);
-  const origin = { lng: -100.17996883208497, lat: 26.528281587203573 };
+  const origin = { lng: -100.0095504, lat: 26.509672 }; // Updated starting point
   const pricePerKm = 19;
 
   useEffect(() => {
@@ -107,6 +107,7 @@ const GoogleMapsRoute = ({ setDistance }) => {
         <GoogleMap
           center={{ lat: origin.lat, lng: origin.lng }}
           zoom={7}
+          maxZoom={20} // Allow more zoom
           mapContainerStyle={{ height: '400px', width: '100%', marginTop: '20px' }}
           onLoad={(map) => setMap(map)}
           onClick={(event) => {
