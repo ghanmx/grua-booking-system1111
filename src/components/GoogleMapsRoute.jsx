@@ -1,7 +1,7 @@
 import { Box, Button, FormControl, FormLabel, Heading, Input, Text } from '@chakra-ui/react';
 import { GoogleMap, LoadScript, Marker, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
 import PropTypes from 'prop-types';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const GoogleMapsRoute = ({ setDistance }) => {
   const [pickup, setPickup] = useState(null);
@@ -9,8 +9,32 @@ const GoogleMapsRoute = ({ setDistance }) => {
   const [error, setError] = useState(null);
   const [totalPrice, setTotalPrice] = useState(0);
   const [directions, setDirections] = useState(null);
+  const [map, setMap] = useState(null);
+  const [tollCost, setTollCost] = useState(0);
   const origin = { lng: -100.17996883208497, lat: 26.528281587203573 };
   const pricePerKm = 19;
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          setPickup(userLocation);
+          if (map) {
+            map.panTo(userLocation);
+          }
+        },
+        (error) => {
+          console.error('Error getting user location:', error);
+        }
+      );
+    } else {
+      console.error('Geolocation is not supported by this browser.');
+    }
+  }, [map]);
 
   const calculateRoute = () => {
     setError(null);
@@ -32,6 +56,7 @@ const GoogleMapsRoute = ({ setDistance }) => {
           setDistance(distanceToDestination);
           const price = calculatePrice(distanceToDestination);
           setTotalPrice(price);
+          fetchTollData(pickup, destination);
         } else if (status === 'REQUEST_DENIED') {
           setError('Request denied. Please check your API key and permissions.');
           console.error('Error calculating the route:', status, response);
@@ -44,7 +69,18 @@ const GoogleMapsRoute = ({ setDistance }) => {
   };
 
   const calculatePrice = (distance) => {
-    return distance * pricePerKm + 558; // Tarifa base de $558 más $19 por kilómetro
+    return distance * pricePerKm + 558 + tollCost; // Tarifa base de $558 más $19 por kilómetro más el costo de las casetas
+  };
+
+  const fetchTollData = async (origin, destination) => {
+    try {
+      const response = await fetch(`https://api.tollguru.com/v1/calc/route?source=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}`);
+      const data = await response.json();
+      const tolls = data.tolls || 0;
+      setTollCost(tolls);
+    } catch (error) {
+      console.error('Error fetching toll data:', error);
+    }
   };
 
   return (
@@ -72,6 +108,7 @@ const GoogleMapsRoute = ({ setDistance }) => {
           center={{ lat: origin.lat, lng: origin.lng }}
           zoom={7}
           mapContainerStyle={{ height: '400px', width: '100%', marginTop: '20px' }}
+          onLoad={(map) => setMap(map)}
           onClick={(event) => {
             try {
               if (!pickup) {
@@ -85,8 +122,8 @@ const GoogleMapsRoute = ({ setDistance }) => {
             }
           }}
         >
-          {pickup && <Marker position={pickup} />}
-          {destination && <Marker position={destination} />}
+          {pickup && <Marker position={pickup} draggable={true} onDragEnd={(e) => setPickup(e.latLng.toJSON())} />}
+          {destination && <Marker position={destination} draggable={true} onDragEnd={(e) => setDestination(e.latLng.toJSON())} />}
           {pickup && destination && (
             <DirectionsService
               options={{
