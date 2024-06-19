@@ -67,7 +67,7 @@ const GoogleMapsRoute = ({ setDistance }) => {
       <Text mt={4} fontSize="xl">
         Precio total: ${totalPrice.toFixed(2)}
       </Text>
-      <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ''}>
+      <LoadScript googleMapsApiKey="AIzaSyDortki8ly1t1-bjY5ZuLNRQBpdfSc1Q0I">
         <GoogleMap
           center={{ lat: origin.lat, lng: origin.lng }}
           zoom={7}

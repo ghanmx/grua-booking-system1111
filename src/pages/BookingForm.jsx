@@ -171,6 +171,13 @@ const BookingForm = () => {
               });
             } else {
               console.error('Directions request failed:', response);
+              toast({
+                title: 'Error',
+                description: 'There was a problem calculating the route. Please try again later.',
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+              });
             }
           }}
         />
@@ -229,7 +236,7 @@ const BookingForm = () => {
             <FormLabel>Pickup Time</FormLabel>
             <Input type="time" name="pickupTime" value={formData.pickupTime} onChange={handleChange} />
           </FormControl>
-          <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+          <LoadScript googleMapsApiKey="AIzaSyDortki8ly1t1-bjY5ZuLNRQBpdfSc1Q0I">
             <GoogleMap
               center={origin}
               zoom={10}
