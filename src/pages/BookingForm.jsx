@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, VStack, useToast } from '@chakra-ui/react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import GoogleMapsRoute from '../components/GoogleMapsRoute';
-import UserLocationMarker from '../components/UserLocationMarker';
+import { LoadScript, GoogleMap, Marker, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
 
 const BookingForm = () => {
   const [formData, setFormData] = useState({
@@ -24,6 +23,7 @@ const BookingForm = () => {
   const [origin, setOrigin] = useState({ lat: 26.509672, lng: -100.0095504 });
   const [pickupLocation, setPickupLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
+  const [directions, setDirections] = useState(null);
 
   const toast = useToast();
   const navigate = useNavigate();
@@ -110,6 +110,7 @@ const BookingForm = () => {
   const handleReset = () => {
     setPickupLocation(null);
     setDestinationLocation(null);
+    setDirections(null);
     console.log('Map reset');
   };
 
@@ -142,6 +143,40 @@ const BookingForm = () => {
     } else {
       console.error('Geolocation is not supported by this browser.');
     }
+  };
+
+  const calculateRoute = () => {
+    if (pickupLocation && destinationLocation) {
+      return (
+        <DirectionsService
+          options={{
+            origin: pickupLocation,
+            destination: destinationLocation,
+            travelMode: 'DRIVING',
+          }}
+          callback={(response, status) => {
+            if (status === 'OK') {
+              setDirections(response);
+              const distanceInKm = response.routes[0].legs[0].distance.value / 1000;
+              setFormData((prevData) => ({ ...prevData, distance: distanceInKm }));
+              console.log('Route calculated:', response);
+            } else if (status === 'REQUEST_DENIED') {
+              console.error('Directions request denied:', response);
+              toast({
+                title: 'Error',
+                description: 'Directions request was denied. Please check your API key and permissions.',
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+              });
+            } else {
+              console.error('Directions request failed:', response);
+            }
+          }}
+        />
+      );
+    }
+    return null;
   };
 
   return (
@@ -194,7 +229,20 @@ const BookingForm = () => {
             <FormLabel>Pickup Time</FormLabel>
             <Input type="time" name="pickupTime" value={formData.pickupTime} onChange={handleChange} />
           </FormControl>
-          <GoogleMapsRoute setDistance={(distance) => setFormData({ ...formData, distance })} />
+          <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+            <GoogleMap
+              center={origin}
+              zoom={10}
+              mapContainerStyle={{ height: '400px', width: '100%' }}
+              onClick={handleMapClick}
+              onLoad={(map) => (mapRef.current = map)}
+            >
+              {pickupLocation && <Marker position={pickupLocation} />}
+              {destinationLocation && <Marker position={destinationLocation} />}
+              {calculateRoute()}
+              {directions && <DirectionsRenderer directions={directions} />}
+            </GoogleMap>
+          </LoadScript>
           <Button onClick={handleReset} mt={4}>Reset</Button>
           <Button onClick={handleConfirm} mt={4} ml={4} colorScheme="blue">Confirm</Button>
           <Button colorScheme="blue" type="submit">Book Now</Button>

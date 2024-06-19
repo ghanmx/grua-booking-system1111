@@ -1,5 +1,5 @@
 import { Box, Button, FormControl, FormLabel, Heading, Input, Text } from '@chakra-ui/react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 
@@ -8,6 +8,7 @@ const GoogleMapsRoute = ({ setDistance }) => {
   const [destination, setDestination] = useState(null);
   const [error, setError] = useState(null);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [directions, setDirections] = useState(null);
   const origin = { lng: -100.17996883208497, lat: 26.528281587203573 };
   const pricePerKm = 19;
 
@@ -31,6 +32,9 @@ const GoogleMapsRoute = ({ setDistance }) => {
           setDistance(distanceToDestination);
           const price = calculatePrice(distanceToDestination);
           setTotalPrice(price);
+        } else if (status === 'REQUEST_DENIED') {
+          setError('Request denied. Please check your API key and permissions.');
+          console.error('Error calculating the route:', status, response);
         } else {
           setError('Error calculating the route: ' + status);
           console.error('Error calculating the route:', status, response);
@@ -69,15 +73,44 @@ const GoogleMapsRoute = ({ setDistance }) => {
           zoom={7}
           mapContainerStyle={{ height: '400px', width: '100%', marginTop: '20px' }}
           onClick={(event) => {
-            if (!pickup) {
-              setPickup(event.latLng.toJSON());
-            } else if (!destination) {
-              setDestination(event.latLng.toJSON());
+            try {
+              if (!pickup) {
+                setPickup(event.latLng.toJSON());
+              } else if (!destination) {
+                setDestination(event.latLng.toJSON());
+              }
+            } catch (err) {
+              setError('Error setting location: ' + err.message);
+              console.error('Error setting location:', err);
             }
           }}
         >
           {pickup && <Marker position={pickup} />}
           {destination && <Marker position={destination} />}
+          {pickup && destination && (
+            <DirectionsService
+              options={{
+                origin: pickup,
+                destination: destination,
+                travelMode: 'DRIVING',
+              }}
+              callback={(response, status) => {
+                if (status === 'OK') {
+                  setDirections(response);
+                } else {
+                  setError('Error fetching directions: ' + status);
+                  console.error('Error fetching directions:', status, response);
+                }
+              }}
+            />
+          )}
+          {directions && (
+            <DirectionsRenderer
+              options={{
+                directions: directions,
+              }}
+            />
+          )}
         </GoogleMap>
       </LoadScript>
     </Box>
