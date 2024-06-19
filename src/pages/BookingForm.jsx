@@ -105,10 +105,33 @@ const BookingForm = () => {
 
   const handleConfirm = () => {
     if (pickupLocation && mapRef.current) {
-      mapRef.current.panTo(pickupLocation);
+      centerPickupMarker();
     }
     setFormData((prevData) => ({ ...prevData, origin, pickupLocation, destinationLocation }));
     console.log('Origin, Pickup, and Destination confirmed:', { origin, pickupLocation, destinationLocation });
+  };
+
+  const centerPickupMarker = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          setPickupLocation(userLocation);
+          if (mapRef.current) {
+            mapRef.current.panTo(userLocation);
+          }
+          console.log('Pickup marker centered to user location:', userLocation);
+        },
+        (error) => {
+          console.error('Error getting user location:', error);
+        }
+      );
+    } else {
+      console.error('Geolocation is not supported by this browser.');
+    }
   };
 
   return (
