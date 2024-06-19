@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, VStack, useToast } from '@chakra-ui/react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { LoadScript, GoogleMap, Marker, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
+import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
+import GoogleMapsRoute from '../components/GoogleMapsRoute';
+import InstructionsSidebar from '../components/InstructionsSidebar';
+import UserLocationMarker from '../components/UserLocationMarker';
 
 const BookingForm = () => {
   const [formData, setFormData] = useState({
@@ -23,7 +25,6 @@ const BookingForm = () => {
   const [origin, setOrigin] = useState({ lat: 26.509672, lng: -100.0095504 });
   const [pickupLocation, setPickupLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
-  const [directions, setDirections] = useState(null);
 
   const toast = useToast();
   const navigate = useNavigate();
@@ -70,22 +71,6 @@ const BookingForm = () => {
     navigate('/payment', { state: { formData, totalCost, serviceDetails: { serviceType, distance, pickupLocation, destinationLocation } } });
   };
 
-  const handleDirectionsCallback = (response) => {
-    if (response !== null) {
-      if (response.status === 'OK') {
-        setDirections(response);
-        const distanceInMeters = response.routes[0].legs.reduce((acc, leg) => acc + leg.distance.value, 0);
-        const distanceInKm = distanceInMeters / 1000;
-        setFormData((prevData) => ({ ...prevData, distance: distanceInKm }));
-        console.log('Directions response:', response);
-      } else {
-        console.error('Directions request failed due to:', response.status);
-      }
-    } else {
-      console.error('Directions response is null');
-    }
-  };
-
   const handleMapClick = (event) => {
     if (!pickupLocation) {
       setPickupLocation({ lat: event.latLng.lat(), lng: event.latLng.lng() });
@@ -99,7 +84,6 @@ const BookingForm = () => {
   const handleReset = () => {
     setPickupLocation(null);
     setDestinationLocation(null);
-    setDirections(null);
     console.log('Map reset');
   };
 
@@ -184,40 +168,12 @@ const BookingForm = () => {
             <FormLabel>Pickup Time</FormLabel>
             <Input type="time" name="pickupTime" value={formData.pickupTime} onChange={handleChange} />
           </FormControl>
-          <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
-            <GoogleMap
-              mapContainerStyle={{ height: "400px", width: "100%" }}
-              zoom={7}
-              center={origin}
-              onClick={handleMapClick}
-              onLoad={map => (mapRef.current = map)}
-            >
-              {origin && <Marker position={origin} />}
-              {pickupLocation && <Marker position={pickupLocation} />}
-              {destinationLocation && <Marker position={destinationLocation} />}
-              {origin && pickupLocation && destinationLocation && !directions && (
-                <DirectionsService
-                  options={{
-                    destination: destinationLocation,
-                    origin: origin,
-                    waypoints: [{ location: pickupLocation, stopover: true }],
-                    travelMode: 'DRIVING'
-                  }}
-                  callback={handleDirectionsCallback}
-                />
-              )}
-              {directions && (
-                <DirectionsRenderer
-                  options={{
-                    directions: directions
-                  }}
-                />
-              )}
-            </GoogleMap>
-          </LoadScript>
+          <GoogleMapsRoute setDistance={(distance) => setFormData({ ...formData, distance })} />
+          <InstructionsSidebar />
           <Button onClick={handleReset} mt={4}>Reset</Button>
           <Button onClick={handleConfirm} mt={4} ml={4} colorScheme="blue">Confirm</Button>
           <Button colorScheme="blue" type="submit">Book Now</Button>
+          <Button as={RouterLink} to="/booking" colorScheme="blue" mt={4}>Go to Booking Page</Button>
         </VStack>
       </form>
     </Box>
