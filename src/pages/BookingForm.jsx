@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, VStack, useToast } from '@chakra-ui/react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Link as RouterLink } from 'react-router-dom';
 import { LoadScript, GoogleMap, Marker, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
 
 const BookingForm = () => {
@@ -16,11 +15,14 @@ const BookingForm = () => {
     pickupDate: '',
     pickupTime: '',
     origin: { lat: 26.509672, lng: -100.0095504 },
-    destination: null,
+    pickupLocation: null,
+    destinationLocation: null,
+    distance: 0,
   });
 
   const [origin, setOrigin] = useState({ lat: 26.509672, lng: -100.0095504 });
-  const [destination, setDestination] = useState(null);
+  const [pickupLocation, setPickupLocation] = useState(null);
+  const [destinationLocation, setDestinationLocation] = useState(null);
   const [directions, setDirections] = useState(null);
 
   const toast = useToast();
@@ -29,9 +31,9 @@ const BookingForm = () => {
 
   useEffect(() => {
     if (location.state) {
-      const { origin, destination } = location.state;
-      setFormData((prevData) => ({ ...prevData, origin, destination }));
-      console.log('Origin and Destination set from location state:', { origin, destination });
+      const { origin, pickupLocation, destinationLocation } = location.state;
+      setFormData((prevData) => ({ ...prevData, origin, pickupLocation, destinationLocation }));
+      console.log('Origin, Pickup, and Destination set from location state:', { origin, pickupLocation, destinationLocation });
     }
   }, [location.state]);
 
@@ -43,9 +45,9 @@ const BookingForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const { serviceType, userName, phoneNumber, vehicleMake, vehicleModel, vehicleSize, pickupDate, pickupTime, origin, destination } = formData;
+    const { serviceType, userName, phoneNumber, vehicleMake, vehicleModel, vehicleSize, pickupDate, pickupTime, origin, pickupLocation, destinationLocation, distance } = formData;
 
-    if (!serviceType || !userName || !phoneNumber || !vehicleMake || !vehicleModel || !vehicleSize || !pickupDate || !pickupTime || !origin || !destination) {
+    if (!serviceType || !userName || !phoneNumber || !vehicleMake || !vehicleModel || !vehicleSize || !pickupDate || !pickupTime || !origin || !pickupLocation || !destinationLocation) {
       toast({
         title: 'Error',
         description: 'Please fill in all required fields.',
@@ -58,14 +60,20 @@ const BookingForm = () => {
 
     console.log('Form submitted with data:', formData);
 
-    // Redirect to confirmation page
-    navigate('/confirmation', { state: { formData } });
+    // Redirect to payment page with calculated cost
+    const baseCost = 558;
+    const costPerKm = 19;
+    const totalCost = baseCost + (distance * costPerKm);
+    navigate('/payment', { state: { formData, totalCost } });
   };
 
   const handleDirectionsCallback = (response) => {
     if (response !== null) {
       if (response.status === 'OK') {
         setDirections(response);
+        const distanceInMeters = response.routes[0].legs.reduce((acc, leg) => acc + leg.distance.value, 0);
+        const distanceInKm = distanceInMeters / 1000;
+        setFormData((prevData) => ({ ...prevData, distance: distanceInKm }));
         console.log('Directions response:', response);
       } else {
         console.error('Directions request failed due to:', response.status);
@@ -76,21 +84,25 @@ const BookingForm = () => {
   };
 
   const handleMapClick = (event) => {
-    if (!destination) {
-      setDestination({ lat: event.latLng.lat(), lng: event.latLng.lng() });
-      console.log('Destination set to:', { lat: event.latLng.lat(), lng: event.latLng.lng() });
+    if (!pickupLocation) {
+      setPickupLocation({ lat: event.latLng.lat(), lng: event.latLng.lng() });
+      console.log('Pickup location set to:', { lat: event.latLng.lat(), lng: event.latLng.lng() });
+    } else if (!destinationLocation) {
+      setDestinationLocation({ lat: event.latLng.lat(), lng: event.latLng.lng() });
+      console.log('Destination location set to:', { lat: event.latLng.lat(), lng: event.latLng.lng() });
     }
   };
 
   const handleReset = () => {
-    setDestination(null);
+    setPickupLocation(null);
+    setDestinationLocation(null);
     setDirections(null);
     console.log('Map reset');
   };
 
   const handleConfirm = () => {
-    setFormData((prevData) => ({ ...prevData, origin, destination }));
-    console.log('Origin and Destination confirmed:', { origin, destination });
+    setFormData((prevData) => ({ ...prevData, origin, pickupLocation, destinationLocation }));
+    console.log('Origin, Pickup, and Destination confirmed:', { origin, pickupLocation, destinationLocation });
   };
 
   return (
@@ -151,13 +163,14 @@ const BookingForm = () => {
               onClick={handleMapClick}
             >
               {origin && <Marker position={origin} />}
-              {destination && <Marker position={destination} />}
-              {origin && destination && !directions && (
+              {pickupLocation && <Marker position={pickupLocation} />}
+              {destinationLocation && <Marker position={destinationLocation} />}
+              {origin && pickupLocation && destinationLocation && !directions && (
                 <DirectionsService
                   options={{
-                    destination: destination,
+                    destination: destinationLocation,
                     origin: origin,
-                    waypoints: [{ location: formData.origin, stopover: true }],
+                    waypoints: [{ location: pickupLocation, stopover: true }],
                     travelMode: 'DRIVING'
                   }}
                   callback={handleDirectionsCallback}
