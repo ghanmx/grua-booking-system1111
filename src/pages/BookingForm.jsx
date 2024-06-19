@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, VStack, useToast } from '@chakra-ui/react';
-import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import GoogleMapsRoute from '../components/GoogleMapsRoute';
-import InstructionsSidebar from '../components/InstructionsSidebar';
 import UserLocationMarker from '../components/UserLocationMarker';
 
 const BookingForm = () => {
@@ -169,11 +168,9 @@ const BookingForm = () => {
             <Input type="time" name="pickupTime" value={formData.pickupTime} onChange={handleChange} />
           </FormControl>
           <GoogleMapsRoute setDistance={(distance) => setFormData({ ...formData, distance })} />
-          <InstructionsSidebar />
           <Button onClick={handleReset} mt={4}>Reset</Button>
           <Button onClick={handleConfirm} mt={4} ml={4} colorScheme="blue">Confirm</Button>
           <Button colorScheme="blue" type="submit">Book Now</Button>
-          <Button as={RouterLink} to="/booking" colorScheme="blue" mt={4}>Go to Booking Page</Button>
         </VStack>
       </form>
     </Box>
