@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 const Payment = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { formData, totalCost } = location.state || {};
+  const { formData, totalCost, serviceDetails } = location.state || {};
 
   const handlePayment = () => {
     // Implement payment logic here
@@ -27,6 +27,9 @@ const Payment = () => {
             <Text>Pickup Date: {formData.pickupDate}</Text>
             <Text>Pickup Time: {formData.pickupTime}</Text>
             <Text>Total Cost: ${totalCost}</Text>
+            <Text>Distance: {serviceDetails.distance} km</Text>
+            <Text>Pickup Location: {JSON.stringify(serviceDetails.pickupLocation)}</Text>
+            <Text>Destination Location: {JSON.stringify(serviceDetails.destinationLocation)}</Text>
             <Button colorScheme="blue" onClick={handlePayment}>Pay Now</Button>
           </>
         ) : (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, VStack, useToast } from '@chakra-ui/react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LoadScript, GoogleMap, Marker, DirectionsService, DirectionsRenderer } from '@react-google-maps/api';
@@ -28,6 +28,7 @@ const BookingForm = () => {
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const mapRef = useRef(null);
 
   useEffect(() => {
     if (location.state) {
@@ -60,11 +61,13 @@ const BookingForm = () => {
 
     console.log('Form submitted with data:', formData);
 
-    // Redirect to payment page with calculated cost
+    // Calculate total cost
     const baseCost = 558;
     const costPerKm = 19;
     const totalCost = baseCost + (distance * costPerKm);
-    navigate('/payment', { state: { formData, totalCost } });
+
+    // Redirect to payment page with calculated cost and additional details
+    navigate('/payment', { state: { formData, totalCost, serviceDetails: { serviceType, distance, pickupLocation, destinationLocation } } });
   };
 
   const handleDirectionsCallback = (response) => {
@@ -101,6 +104,9 @@ const BookingForm = () => {
   };
 
   const handleConfirm = () => {
+    if (pickupLocation && mapRef.current) {
+      mapRef.current.panTo(pickupLocation);
+    }
     setFormData((prevData) => ({ ...prevData, origin, pickupLocation, destinationLocation }));
     console.log('Origin, Pickup, and Destination confirmed:', { origin, pickupLocation, destinationLocation });
   };
@@ -161,6 +167,7 @@ const BookingForm = () => {
               zoom={7}
               center={origin}
               onClick={handleMapClick}
+              onLoad={map => (mapRef.current = map)}
             >
               {origin && <Marker position={origin} />}
               {pickupLocation && <Marker position={pickupLocation} />}
