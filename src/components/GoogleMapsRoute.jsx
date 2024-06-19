@@ -14,6 +14,7 @@ const GoogleMapsRoute = ({ setDistance }) => {
   const calculateRoute = () => {
     setError(null);
     if (!pickup || !destination) {
+      setError('Please fill in all required fields.');
       return;
     }
 
@@ -32,6 +33,9 @@ const GoogleMapsRoute = ({ setDistance }) => {
           setDistance(totalDistance);
           const price = calculatePrice(totalDistance);
           setTotalPrice(price);
+        } else if (status === 'REQUEST_DENIED') {
+          setError('Request denied. Please check your API key and permissions.');
+          console.error('Error al calcular la ruta:', status, response);
         } else {
           setError('Error al calcular la ruta: ' + status);
         }
@@ -63,7 +67,7 @@ const GoogleMapsRoute = ({ setDistance }) => {
       <Text mt={4} fontSize="xl">
         Precio total: ${totalPrice.toFixed(2)}
       </Text>
-      <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+      <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ''}>
         <GoogleMap
           center={{ lat: origin.lat, lng: origin.lng }}
           zoom={7}
