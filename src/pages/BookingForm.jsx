@@ -39,6 +39,10 @@ const BookingForm = () => {
     }
   }, [location.state]);
 
+  useEffect(() => {
+    console.log('formData:', formData);
+  }, [formData]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -231,7 +235,15 @@ const BookingForm = () => {
             <FormLabel>Pickup Time</FormLabel>
             <Input type="time" name="pickupTime" value={formData.pickupTime} onChange={handleChange} />
           </FormControl>
-          <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+          <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY} onError={() => {
+            toast({
+              title: 'Error',
+              description: 'Failed to load Google Maps API. Please check your API key and internet connection.',
+              status: 'error',
+              duration: 5000,
+              isClosable: true,
+            });
+          }}>
             <GoogleMap
               center={origin}
               zoom={10}
@@ -263,7 +275,16 @@ const BookingForm = () => {
                 />
               )}
               {calculateRoute()}
-              {directions && <DirectionsRenderer directions={directions} />}
+              {directions && <DirectionsRenderer directions={directions} onError={(error) => {
+                console.error('Error rendering directions:', error);
+                toast({
+                  title: 'Error',
+                  description: 'There was a problem rendering the directions. Please try again later.',
+                  status: 'error',
+                  duration: 5000,
+                  isClosable: true,
+                });
+              }} />}
             </GoogleMap>
           </LoadScript>
           <Button onClick={handleReset} mt={4}>Reset</Button>
