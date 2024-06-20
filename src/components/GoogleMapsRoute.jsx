@@ -29,10 +29,12 @@ const GoogleMapsRoute = ({ setDistance }) => {
         },
         (error) => {
           console.error('Error getting user location:', error);
+          setError('Error getting user location: ' + error.message);
         }
       );
     } else {
       console.error('Geolocation is not supported by this browser.');
+      setError('Geolocation is not supported by this browser.');
     }
   }, [map]);
 
@@ -43,34 +45,25 @@ const GoogleMapsRoute = ({ setDistance }) => {
       return;
     }
 
-    const waypoints = [
+    const directionsService = new window.google.maps.DirectionsService();
+    directionsService.route(
       {
-        location: pickup,
-        stopover: true,
+        origin: pickup,
+        destination: destination,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+        waypoints: [{ location: pickup, stopover: true }],
       },
-    ];
-
-    const service = new window.google.maps.DistanceMatrixService();
-    service.getDistanceMatrix(
-      {
-        origins: [{ lat: 26.509672, lng: -100.0095504 }],
-        destinations: [destination],
-        travelMode: 'DRIVING',
-        waypoints: waypoints,
-      },
-      (response, status) => {
-        if (status === 'OK') {
-          const distanceToDestination = response.rows[0].elements[0].distance.value / 1000; // Distancia en kilómetros al destino
+      (result, status) => {
+        if (status === window.google.maps.DirectionsStatus.OK) {
+          setDirections(result);
+          const distanceToDestination = result.routes[0].legs[0].distance.value / 1000; // Distance in kilometers
           setDistance(distanceToDestination);
           const price = calculatePrice(distanceToDestination);
           setTotalPrice(price);
           fetchTollData(pickup, destination);
-        } else if (status === 'REQUEST_DENIED') {
-          setError('Request denied. Please check your API key and permissions.');
-          console.error('Error calculating the route:', status, response);
         } else {
           setError('Error calculating the route: ' + status);
-          console.error('Error calculating the route:', status, response);
+          console.error('Error calculating the route:', status, result);
         }
       }
     );
@@ -82,12 +75,17 @@ const GoogleMapsRoute = ({ setDistance }) => {
 
   const fetchTollData = async (origin, destination) => {
     try {
-      const response = await fetch(`https://api.tollguru.com/v1/calc/route?source=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}`);
+      const response = await fetch(`https://api.tollguru.com/v1/calc/route?source=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}`, {
+        headers: {
+          'x-api-key': process.env.REACT_APP_TOLLGURU_API_KEY,
+        },
+      });
       const data = await response.json();
-      const tolls = data.tolls || 0;
+      const tolls = data.tollCosts || 0;
       setTollCost(tolls);
     } catch (error) {
       console.error('Error fetching toll data:', error);
+      setError('Error fetching toll data: ' + error.message);
     }
   };
 
@@ -111,7 +109,7 @@ const GoogleMapsRoute = ({ setDistance }) => {
       <Text mt={4} fontSize="xl">
         Precio total: ${totalPrice.toFixed(2)}
       </Text>
-      <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+      <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY} libraries={['places', 'geometry']}>
         <GoogleMap
           center={{ lat: origin.lat, lng: origin.lng }}
           zoom={7}
@@ -136,18 +134,13 @@ const GoogleMapsRoute = ({ setDistance }) => {
           {pickup && destination && (
             <DirectionsService
               options={{
-                origin: { lat: 26.509672, lng: -100.0095504 },
+                origin: pickup,
                 destination: destination,
-                travelMode: 'DRIVING',
-                waypoints: [
-                  {
-                    location: pickup,
-                    stopover: true,
-                  },
-                ],
+                travelMode: window.google.maps.TravelMode.DRIVING,
+                waypoints: [{ location: pickup, stopover: true }],
               }}
               callback={(response, status) => {
-                if (status === 'OK') {
+                if (status === window.google.maps.DirectionsStatus.OK) {
                   setDirections(response);
                 } else {
                   setError('Error fetching directions: ' + status);
