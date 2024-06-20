@@ -115,9 +115,6 @@ const BookingForm = () => {
   };
 
   const handleConfirm = () => {
-    if (pickupLocation && mapRef.current) {
-      centerPickupMarker();
-    }
     setFormData((prevData) => ({ ...prevData, origin, pickupLocation, destinationLocation }));
     console.log('Origin, Pickup, and Destination confirmed:', { origin, pickupLocation, destinationLocation });
   };
@@ -243,9 +240,30 @@ const BookingForm = () => {
               mapContainerStyle={{ height: '400px', width: '100%' }}
               onClick={handleMapClick}
               onLoad={(map) => (mapRef.current = map)}
+              options={{
+                zoomControl: true,
+                zoomControlOptions: {
+                  position: window.google.maps.ControlPosition.RIGHT_CENTER,
+                },
+                streetViewControl: false,
+                mapTypeControl: false,
+                fullscreenControl: false,
+              }}
             >
-              {pickupLocation && <Marker position={pickupLocation} />}
-              {destinationLocation && <Marker position={destinationLocation} />}
+              {pickupLocation && (
+                <Marker
+                  position={pickupLocation}
+                  draggable={true}
+                  onDragEnd={(e) => setPickupLocation({ lat: e.latLng.lat(), lng: e.latLng.lng() })}
+                />
+              )}
+              {destinationLocation && (
+                <Marker
+                  position={destinationLocation}
+                  draggable={true}
+                  onDragEnd={(e) => setDestinationLocation({ lat: e.latLng.lat(), lng: e.latLng.lng() })}
+                />
+              )}
               {calculateRoute()}
               {directions && <DirectionsRenderer directions={directions} />}
             </GoogleMap>
