@@ -43,12 +43,20 @@ const GoogleMapsRoute = ({ setDistance }) => {
       return;
     }
 
+    const waypoints = [
+      {
+        location: pickup,
+        stopover: true,
+      },
+    ];
+
     const service = new window.google.maps.DistanceMatrixService();
     service.getDistanceMatrix(
       {
-        origins: [pickup],
+        origins: [{ lat: 26.509672, lng: -100.0095504 }],
         destinations: [destination],
         travelMode: 'DRIVING',
+        waypoints: waypoints,
       },
       (response, status) => {
         if (status === 'OK') {
@@ -128,9 +136,15 @@ const GoogleMapsRoute = ({ setDistance }) => {
           {pickup && destination && (
             <DirectionsService
               options={{
-                origin: pickup,
+                origin: { lat: 26.509672, lng: -100.0095504 },
                 destination: destination,
                 travelMode: 'DRIVING',
+                waypoints: [
+                  {
+                    location: pickup,
+                    stopover: true,
+                  },
+                ],
               }}
               callback={(response, status) => {
                 if (status === 'OK') {
