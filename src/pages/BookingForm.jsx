@@ -82,6 +82,7 @@ const BookingForm = () => {
         navigate('/payment', { state: { formData, totalCost, serviceDetails: { serviceType, distance, pickupLocation, destinationLocation } } });
       })
       .catch((error) => {
+        console.error('Error processing booking:', error);
         toast({
           title: 'Error',
           description: 'There was a problem processing your booking. Please try again later.',
@@ -144,6 +145,7 @@ const BookingForm = () => {
               setFormData((prevData) => ({ ...prevData, distance: distanceInKm }));
               fetchTollData(pickupLocation, destinationLocation);
             } else if (status === 'REQUEST_DENIED') {
+              console.error('Directions request was denied:', response);
               toast({
                 title: 'Error',
                 description: 'Directions request was denied. Please check your API key and permissions.',
@@ -152,6 +154,7 @@ const BookingForm = () => {
                 isClosable: true,
               });
             } else {
+              console.error('Error calculating route:', response);
               toast({
                 title: 'Error',
                 description: 'There was a problem calculating the route. Please try again later.',
@@ -228,7 +231,7 @@ const BookingForm = () => {
             <FormLabel>Pickup Time</FormLabel>
             <Input type="time" name="pickupTime" value={formData.pickupTime} onChange={handleChange} />
           </FormControl>
-          <LoadScript googleMapsApiKey="AIzaSyDortki8ly1t1-bjY5ZuLNRQBpdfSc1Q0I">
+          <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
             <GoogleMap
               center={origin}
               zoom={10}
