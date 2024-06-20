@@ -24,6 +24,8 @@ const BookingForm = () => {
   const [pickupLocation, setPickupLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
   const [directions, setDirections] = useState(null);
+  const [totalDistance, setTotalDistance] = useState(0);
+  const [tollCost, setTollCost] = useState(0);
 
   const toast = useToast();
   const navigate = useNavigate();
@@ -34,14 +36,12 @@ const BookingForm = () => {
     if (location.state) {
       const { origin, pickupLocation, destinationLocation } = location.state;
       setFormData((prevData) => ({ ...prevData, origin, pickupLocation, destinationLocation }));
-      console.log('Origin, Pickup, and Destination set from location state:', { origin, pickupLocation, destinationLocation });
     }
   }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    console.log('Form data updated:', { [name]: value });
   };
 
   const handleSubmit = (e) => {
@@ -59,12 +59,10 @@ const BookingForm = () => {
       return;
     }
 
-    console.log('Form submitted with data:', formData);
-
     // Calculate total cost
     const baseCost = 558;
     const costPerKm = 19;
-    const totalCost = baseCost + (distance * costPerKm);
+    const totalCost = baseCost + (distance * costPerKm) + tollCost;
 
     // Send booking request to the backend
     fetch('https://your-backend-api.com/bookings', {
@@ -81,12 +79,9 @@ const BookingForm = () => {
         return response.json();
       })
       .then((data) => {
-        console.log('Booking successful:', data);
-        // Redirect to payment page with calculated cost and additional details
         navigate('/payment', { state: { formData, totalCost, serviceDetails: { serviceType, distance, pickupLocation, destinationLocation } } });
       })
       .catch((error) => {
-        console.error('There was a problem with the booking request:', error);
         toast({
           title: 'Error',
           description: 'There was a problem processing your booking. Please try again later.',
@@ -100,10 +95,8 @@ const BookingForm = () => {
   const handleMapClick = (event) => {
     if (!pickupLocation) {
       setPickupLocation({ lat: event.latLng.lat(), lng: event.latLng.lng() });
-      console.log('Pickup location set to:', { lat: event.latLng.lat(), lng: event.latLng.lng() });
     } else if (!destinationLocation) {
       setDestinationLocation({ lat: event.latLng.lat(), lng: event.latLng.lng() });
-      console.log('Destination location set to:', { lat: event.latLng.lat(), lng: event.latLng.lng() });
     }
   };
 
@@ -111,12 +104,6 @@ const BookingForm = () => {
     setPickupLocation(null);
     setDestinationLocation(null);
     setDirections(null);
-    console.log('Map reset');
-  };
-
-  const handleConfirm = () => {
-    setFormData((prevData) => ({ ...prevData, origin, pickupLocation, destinationLocation }));
-    console.log('Origin, Pickup, and Destination confirmed:', { origin, pickupLocation, destinationLocation });
   };
 
   const centerPickupMarker = () => {
@@ -131,7 +118,6 @@ const BookingForm = () => {
           if (mapRef.current) {
             mapRef.current.panTo(userLocation);
           }
-          console.log('Pickup marker centered to user location:', userLocation);
         },
         (error) => {
           console.error('Error getting user location:', error);
@@ -156,9 +142,8 @@ const BookingForm = () => {
               setDirections(response);
               const distanceInKm = response.routes[0].legs[0].distance.value / 1000;
               setFormData((prevData) => ({ ...prevData, distance: distanceInKm }));
-              console.log('Route calculated:', response);
+              fetchTollData(pickupLocation, destinationLocation);
             } else if (status === 'REQUEST_DENIED') {
-              console.error('Directions request denied:', response);
               toast({
                 title: 'Error',
                 description: 'Directions request was denied. Please check your API key and permissions.',
@@ -167,7 +152,6 @@ const BookingForm = () => {
                 isClosable: true,
               });
             } else {
-              console.error('Directions request failed:', response);
               toast({
                 title: 'Error',
                 description: 'There was a problem calculating the route. Please try again later.',
@@ -181,6 +165,17 @@ const BookingForm = () => {
       );
     }
     return null;
+  };
+
+  const fetchTollData = async (origin, destination) => {
+    try {
+      const response = await fetch(`https://api.tollguru.com/v1/calc/route?source=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}`);
+      const data = await response.json();
+      const tolls = data.tolls || 0;
+      setTollCost(tolls);
+    } catch (error) {
+      console.error('Error fetching toll data:', error);
+    }
   };
 
   return (
@@ -269,7 +264,7 @@ const BookingForm = () => {
             </GoogleMap>
           </LoadScript>
           <Button onClick={handleReset} mt={4}>Reset</Button>
-          <Button onClick={handleConfirm} mt={4} ml={4} colorScheme="blue">Confirm</Button>
+          <Button onClick={centerPickupMarker} mt={4} ml={4} colorScheme="blue">Centrar usuario</Button>
           <Button colorScheme="blue" type="submit">Book Now</Button>
         </VStack>
       </form>
