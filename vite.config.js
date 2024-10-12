@@ -5,7 +5,7 @@ import path from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'), // Enables importing from 'src' as '@'
+      '@': path.resolve(__dirname, './src'), // Permite importar desde 'src' como '@'
     },
   },
   server: {
@@ -15,4 +15,9 @@ export default defineConfig({
     clearScreen: false,
   },
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      external: ['@chakra-ui/icons'], // Agregar '@chakra-ui/icons' aquí
+    },
+  },
 });
