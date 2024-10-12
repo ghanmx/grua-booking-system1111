@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+// vite.config.js
 export default defineConfig({
   resolve: {
     alias: {
@@ -16,7 +17,7 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      external: ['@chakra-ui/icons'], // Agrega '@chakra-ui/icons' como dependencia externa
+      external: ['@chakra-ui/icons', 'react-icons/fa'], // Agrega '@chakra-ui/icons' y 'react-icons/fa' como dependencias externas
     },
   },
   plugins: [react()],
