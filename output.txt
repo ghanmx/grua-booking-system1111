@@ -38,6 +38,7 @@
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@hookform/resolvers": "^3.9.0",
+    "@nestjs/common": "^10.4.4",
     "@react-google-maps/api": "^2.19.3",
     "@sentry/react": "^7.119.1",
     "@sentry/tracing": "^7.108.0",
@@ -157,6 +158,7 @@
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@hookform/resolvers": "^3.9.0",
+    "@nestjs/common": "^10.4.4",
     "@react-google-maps/api": "^2.19.3",
     "@sentry/react": "^7.119.1",
     "@sentry/tracing": "^7.108.0",
@@ -621,10 +623,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+// vite.config.js
 export default defineConfig({
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'), // Enables importing from 'src' as '@'
+      '@': path.resolve(__dirname, './src'), // Permite importar desde 'src' como '@'
     },
   },
   server: {
@@ -632,6 +635,11 @@ export default defineConfig({
     port: '8080',
     strictPort: true,
     clearScreen: false,
+  },
+  build: {
+    rollupOptions: {
+      external: ['@chakra-ui/icons', 'react-icons/fa'], // Agrega '@chakra-ui/icons' y 'react-icons/fa' como dependencias externas
+    },
   },
   plugins: [react()],
 });
@@ -865,6 +873,41 @@ const App = () => {
 };
 
 export default App;
+
+
+// C:\Users\israe\Documents\GitHub\grua-booking-system1111\src\home.tsx
+import React from 'react';
+
+const Home = () => {
+  return (
+    <div style={styles.container}>
+      <h1 style={styles.title}>Welcome Home</h1>
+      <p style={styles.subtitle}>This is the home screen of your app</p>
+    </div>
+  );
+};
+
+const styles = {
+  container: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    backgroundColor: '#F5FCFF',
+  },
+  title: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    marginBottom: '16px',
+  },
+  subtitle: {
+    fontSize: '16px',
+    color: '#333',
+  },
+};
+
+export default Home;
+
 
 
 // C:\Users\israe\Documents\GitHub\grua-booking-system1111\src\setupSampleData.js
