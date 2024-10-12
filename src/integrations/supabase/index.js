@@ -1,11 +1,37 @@
-// Import all the relevant exports from other files in the supabase directory
-import { supabase } from './supabase.js';
-import { SupabaseAuthProvider, useSupabaseAuth, SupabaseAuthUI } from './auth.jsx';
+import React, { createContext, useContext, useEffect } from 'react';
+import { supabase } from '../../config/supabase.config';
+import { SupabaseAuthProvider, useSupabaseAuth } from './auth';
 
-// Export all the imported functions and objects from .auth and .hooks/
-export {
-  supabase,
-  SupabaseAuthProvider,
-  useSupabaseAuth,
-  SupabaseAuthUI,
+const SupabaseContext = createContext();
+
+export const SupabaseProvider = ({ children }) => {
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        supabase.removeAllChannels();
+      }
+    });
+
+    return () => {
+      if (authListener && typeof authListener.unsubscribe === 'function') {
+        authListener.unsubscribe();
+      }
+    };
+  }, []);
+
+  return (
+    <SupabaseContext.Provider value={supabase}>
+      {children}
+    </SupabaseContext.Provider>
+  );
 };
+
+export const useSupabase = () => {
+  const context = useContext(SupabaseContext);
+  if (context === undefined) {
+    throw new Error('useSupabase must be used within a SupabaseProvider');
+  }
+  return context;
+};
+
+export { useSupabaseAuth, SupabaseAuthProvider };

@@ -4,6 +4,7 @@ import { SupabaseAuthProvider, useSupabaseAuth } from './auth';
 
 const SupabaseContext = createContext();
 
+// Proveedor de Supabase
 export const SupabaseProvider = ({ children }) => {
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
@@ -26,6 +27,7 @@ export const SupabaseProvider = ({ children }) => {
   );
 };
 
+// Hook para usar el contexto de Supabase
 export const useSupabase = () => {
   const context = useContext(SupabaseContext);
   if (context === undefined) {
@@ -34,4 +36,5 @@ export const useSupabase = () => {
   return context;
 };
 
+// Exportaciones adicionales
 export { useSupabaseAuth, SupabaseAuthProvider };
