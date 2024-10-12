@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { supabase } from '../../config/supabase.config';
 import { SupabaseAuthProvider, useSupabaseAuth } from './auth';
 
-const SupabaseContext = createContext();
+const SupabaseContext = createContext(null);
 
-export const SupabaseProvider = ({ children }) => {
+export const SupabaseProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
@@ -13,20 +13,18 @@ export const SupabaseProvider = ({ children }) => {
     });
 
     return () => {
-      if (authListener && typeof authListener.unsubscribe === 'function') {
-        authListener.unsubscribe();
+      if (authListener && typeof authListener.subscription.unsubscribe === 'function') {
+        authListener.subscription.unsubscribe();
       }
     };
   }, []);
 
   return (
-    <SupabaseContext.Provider value={supabase}>
+    <SupabaseContext.Provider value={supabase as any}>
       {children}
     </SupabaseContext.Provider>
   );
-};
-
-export const useSupabase = () => {
+};export const useSupabase = () => {
   const context = useContext(SupabaseContext);
   if (context === undefined) {
     throw new Error('useSupabase must be used within a SupabaseProvider');
