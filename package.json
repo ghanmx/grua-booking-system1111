@@ -19,6 +19,8 @@
     "test:coverage": "jest --coverage"
   },
   "devDependencies": {
+    "@stackbit/cms-git": "^1.0.17",
+    "@stackbit/types": "^2.1.1",
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.2",
@@ -36,6 +38,7 @@
     "@emotion/styled": "^11.13.0",
     "@hookform/resolvers": "^3.9.0",
     "@nestjs/common": "^10.4.4",
+    "@netlify/functions": "^2.8.2",
     "@react-google-maps/api": "^2.19.3",
     "@sentry/react": "^7.119.1",
     "@sentry/tracing": "^7.108.0",
