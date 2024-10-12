@@ -14,10 +14,10 @@ export default defineConfig({
     strictPort: true,
     clearScreen: false,
   },
-  plugins: [react()],
   build: {
     rollupOptions: {
-      external: ['@chakra-ui/icons'], // Agregar '@chakra-ui/icons' aquí
+      external: ['@chakra-ui/icons'], // Agrega '@chakra-ui/icons' como dependencia externa
     },
   },
+  plugins: [react()],
 });
