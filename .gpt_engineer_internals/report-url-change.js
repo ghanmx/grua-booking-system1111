@@ -6,7 +6,7 @@ const main = () => {
     try {
       const message = { type: "URL_CHANGED", url: newUrl };
       window.top.postMessage(message, "https://run.gptengineer.app");
-      window.top.postMessage(message, "http://localhost:3000");
+      window.top.postMessage(message, "http://localhost:5000/");
       window.top.postMessage(message, window.origin);
     } catch (error) {
       console.error("Error posting URL change:", error);
